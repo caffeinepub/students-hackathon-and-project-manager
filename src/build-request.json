@@ -1,0 +1,49 @@
+{
+  "kind": "build_request",
+  "title": "Fix deployment-blocking Motoko compilation error in isVerifier",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Fix the deployment-blocking Motoko compilation issue in `backend/main.mo` by ensuring `isVerifier(caller : Principal) : Bool` reliably returns a `Bool` value (specifically the result of `AccessControl.isAdmin(accessControlState, caller)`) so the canister compiles and authorization checks behave as intended wherever `isVerifier` is used.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "yes go"
+        ]
+      },
+      "acceptanceCriteria": [
+        "`backend/main.mo` compiles successfully with no type errors related to `isVerifier`.",
+        "`isVerifier` returns `true` when `AccessControl.isAdmin(accessControlState, caller)` is `true`, and `false` otherwise.",
+        "All existing call sites (`getAchievement`, `getAchievementsByStudentId`, `searchAchievements`) continue to compile and apply verifier/admin visibility rules as before."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor with all logic in `backend/main.mo`.",
+    "Only add `backend/migration.mo` if state shape changes require an upgrade migration (do not add one for this fix if unnecessary).",
+    "Do not edit frontend files under `frontend/src/components/ui` or the immutable hook paths listed in SYSTEM_CONTEXT."
+  ],
+  "nonGoals": [
+    "Implementing deployment speed optimizations.",
+    "Adding new roles/permissions beyond the existing admin-based verifier check.",
+    "UI/UX redesign or new frontend features."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}
