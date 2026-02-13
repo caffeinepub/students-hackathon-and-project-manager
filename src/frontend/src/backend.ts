@@ -89,20 +89,16 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Achievement {
-    status: VerificationStatus;
-    title: string;
-    certificateImage?: ExternalBlob;
-    achievementId: string;
-    studentId: string;
-    verificationHistory: Array<VerificationEvent>;
-    date: Time;
-    studentPrincipal: Principal;
-    description: string;
-    links?: Array<string>;
-    category: AchievementCategory;
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
 }
 export type Time = bigint;
+export interface GeminiChatResponse {
+    answer: string;
+    prompt: string;
+}
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
@@ -117,12 +113,6 @@ export interface AchievementInput {
     links?: Array<string>;
     category: AchievementCategory;
 }
-export interface VerificationEvent {
-    status: VerificationStatus;
-    verifier: Principal;
-    notes?: string;
-    timestamp: Time;
-}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
@@ -134,6 +124,42 @@ export interface Profile {
     name: string;
     role: UserRole;
     email: string;
+}
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface GeminiChatRequest {
+    context: string;
+    message: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export interface Achievement {
+    status: VerificationStatus;
+    title: string;
+    certificateImage?: ExternalBlob;
+    achievementId: string;
+    studentId: string;
+    verificationHistory: Array<VerificationEvent>;
+    date: Time;
+    studentPrincipal: Principal;
+    description: string;
+    links?: Array<string>;
+    category: AchievementCategory;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
+}
+export interface VerificationEvent {
+    status: VerificationStatus;
+    verifier: Principal;
+    notes?: string;
+    timestamp: Time;
 }
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
@@ -164,6 +190,7 @@ export interface backendInterface {
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    chatWithGemini(chatRequest: GeminiChatRequest): Promise<GeminiChatResponse>;
     createAchievement(achievementInput: AchievementInput): Promise<void>;
     getAchievement(achievementId: string): Promise<Achievement>;
     getAchievementsByStudentId(studentId: string): Promise<Array<Achievement>>;
@@ -176,6 +203,7 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: Profile): Promise<void>;
     searchAchievements(searchTerm: string): Promise<Array<Achievement>>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     verifyAchievement(achievementId: string, status: VerificationStatus, notes: string | null): Promise<void>;
 }
 import type { Achievement as _Achievement, AchievementCategory as _AchievementCategory, AchievementInput as _AchievementInput, ExternalBlob as _ExternalBlob, Profile as _Profile, Time as _Time, UserRole as _UserRole, VerificationEvent as _VerificationEvent, VerificationStatus as _VerificationStatus, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
@@ -290,6 +318,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n8(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async chatWithGemini(arg0: GeminiChatRequest): Promise<GeminiChatResponse> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.chatWithGemini(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.chatWithGemini(arg0);
             return result;
         }
     }
@@ -459,6 +501,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.searchAchievements(arg0);
             return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async transform(arg0: TransformationInput): Promise<TransformationOutput> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.transform(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.transform(arg0);
+            return result;
         }
     }
     async verifyAchievement(arg0: string, arg1: VerificationStatus, arg2: string | null): Promise<void> {

@@ -14,6 +14,48 @@ export class ExternalBlob {
     static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export type Time = bigint;
+export interface GeminiChatResponse {
+    answer: string;
+    prompt: string;
+}
+export interface AchievementInput {
+    title: string;
+    certificateImage?: ExternalBlob;
+    achievementId: string;
+    studentId: string;
+    date: Time;
+    studentPrincipal: Principal;
+    description: string;
+    links?: Array<string>;
+    category: AchievementCategory;
+}
+export interface Profile {
+    bio?: string;
+    principal: Principal;
+    studentId?: string;
+    name: string;
+    role: UserRole;
+    email: string;
+}
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface GeminiChatRequest {
+    context: string;
+    message: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export interface Achievement {
     status: VerificationStatus;
     title: string;
@@ -27,31 +69,15 @@ export interface Achievement {
     links?: Array<string>;
     category: AchievementCategory;
 }
-export type Time = bigint;
-export interface AchievementInput {
-    title: string;
-    certificateImage?: ExternalBlob;
-    achievementId: string;
-    studentId: string;
-    date: Time;
-    studentPrincipal: Principal;
-    description: string;
-    links?: Array<string>;
-    category: AchievementCategory;
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
 }
 export interface VerificationEvent {
     status: VerificationStatus;
     verifier: Principal;
     notes?: string;
     timestamp: Time;
-}
-export interface Profile {
-    bio?: string;
-    principal: Principal;
-    studentId?: string;
-    name: string;
-    role: UserRole;
-    email: string;
 }
 export enum AchievementCategory {
     certificate = "certificate",
@@ -71,6 +97,7 @@ export enum VerificationStatus {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    chatWithGemini(chatRequest: GeminiChatRequest): Promise<GeminiChatResponse>;
     createAchievement(achievementInput: AchievementInput): Promise<void>;
     getAchievement(achievementId: string): Promise<Achievement>;
     getAchievementsByStudentId(studentId: string): Promise<Array<Achievement>>;
@@ -83,5 +110,6 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: Profile): Promise<void>;
     searchAchievements(searchTerm: string): Promise<Array<Achievement>>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     verifyAchievement(achievementId: string, status: VerificationStatus, notes: string | null): Promise<void>;
 }

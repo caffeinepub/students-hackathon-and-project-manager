@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { Profile, Achievement, AchievementInput, AchievementCategory, VerificationStatus } from '../backend';
+import { Profile, Achievement, AchievementInput, AchievementCategory, VerificationStatus, GeminiChatRequest, GeminiChatResponse } from '../backend';
 
 // Profile Queries
 export function useGetCallerUserProfile() {
@@ -138,6 +138,18 @@ export function useVerifyAchievement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
+    },
+  });
+}
+
+// Gemini Chat Queries
+export function useChatWithGemini() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (chatRequest: GeminiChatRequest): Promise<GeminiChatResponse> => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.chatWithGemini(chatRequest);
     },
   });
 }

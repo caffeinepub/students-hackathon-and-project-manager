@@ -24,6 +24,14 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const GeminiChatRequest = IDL.Record({
+  'context' : IDL.Text,
+  'message' : IDL.Text,
+});
+export const GeminiChatResponse = IDL.Record({
+  'answer' : IDL.Text,
+  'prompt' : IDL.Text,
+});
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const Time = IDL.Int;
 export const AchievementCategory = IDL.Variant({
@@ -75,6 +83,24 @@ export const Profile = IDL.Record({
   'role' : UserRole,
   'email' : IDL.Text,
 });
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -105,6 +131,7 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'chatWithGemini' : IDL.Func([GeminiChatRequest], [GeminiChatResponse], []),
   'createAchievement' : IDL.Func([AchievementInput], [], []),
   'getAchievement' : IDL.Func([IDL.Text], [Achievement], ['query']),
   'getAchievementsByStudentId' : IDL.Func(
@@ -133,6 +160,11 @@ export const idlService = IDL.Service({
       [IDL.Vec(Achievement)],
       ['query'],
     ),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
+    ),
   'verifyAchievement' : IDL.Func(
       [IDL.Text, VerificationStatus, IDL.Opt(IDL.Text)],
       [],
@@ -158,6 +190,14 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const GeminiChatRequest = IDL.Record({
+    'context' : IDL.Text,
+    'message' : IDL.Text,
+  });
+  const GeminiChatResponse = IDL.Record({
+    'answer' : IDL.Text,
+    'prompt' : IDL.Text,
   });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const Time = IDL.Int;
@@ -210,6 +250,21 @@ export const idlFactory = ({ IDL }) => {
     'role' : UserRole,
     'email' : IDL.Text,
   });
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -240,6 +295,7 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'chatWithGemini' : IDL.Func([GeminiChatRequest], [GeminiChatResponse], []),
     'createAchievement' : IDL.Func([AchievementInput], [], []),
     'getAchievement' : IDL.Func([IDL.Text], [Achievement], ['query']),
     'getAchievementsByStudentId' : IDL.Func(
@@ -266,6 +322,11 @@ export const idlFactory = ({ IDL }) => {
     'searchAchievements' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(Achievement)],
+        ['query'],
+      ),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
         ['query'],
       ),
     'verifyAchievement' : IDL.Func(

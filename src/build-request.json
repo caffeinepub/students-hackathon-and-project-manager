@@ -1,36 +1,157 @@
 {
   "kind": "build_request",
-  "title": "Fix deployment-blocking Motoko compilation error in isVerifier",
-  "priority": "high",
+  "title": "Integrate Google Gemini API into existing chatbot (IC Motoko backend + React UI)",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the deployment-blocking Motoko compilation issue in `backend/main.mo` by ensuring `isVerifier(caller : Principal) : Bool` reliably returns a `Bool` value (specifically the result of `AccessControl.isAdmin(accessControlState, caller)`) so the canister compiles and authorization checks behave as intended wherever `isVerifier` is used.",
+      "text": "Add a backend chat endpoint that sends chatbot user messages to the Google Gemini API (Generative Language REST) and returns the generated response text to the frontend.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-user"
         ],
         "quotes": [
-          "yes go"
+          "Integrate the Gemini API so that the chatbot uses it to search and respond to user queries dynamically.",
+          "Replace or enhance the current chatbot logic to send user queries to the Gemini API.",
+          "Use the official Google Generative AI (Gemini) SDK or REST API."
         ]
       },
       "acceptanceCriteria": [
-        "`backend/main.mo` compiles successfully with no type errors related to `isVerifier`.",
-        "`isVerifier` returns `true` when `AccessControl.isAdmin(accessControlState, caller)` is `true`, and `false` otherwise.",
-        "All existing call sites (`getAchievement`, `getAchievementsByStudentId`, `searchAchievements`) continue to compile and apply verifier/admin visibility rules as before."
+        "backend/main.mo exposes a new public shared method (e.g., chatWithGemini(prompt : Text) : async Text) callable from the frontend actor",
+        "The method performs an outbound HTTPS request to the Gemini REST API endpoint and parses the response into a plain text answer",
+        "The method is fully asynchronous and does not block other canister calls beyond the awaited HTTP outcall",
+        "If Gemini returns a non-2xx response, the backend returns a meaningful error (reject/trap message) that the frontend can display"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Securely manage the Gemini API key so it is never hardcoded in source and never exposed to the browser; document and implement environment-based configuration for local development and deployment.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-user"
+        ],
+        "quotes": [
+          "Securely manage the API key using environment variables."
+        ]
+      },
+      "acceptanceCriteria": [
+        "No frontend code contains the Gemini API key",
+        "No backend source contains a literal API key value",
+        "A documented configuration approach exists that uses environment variables during build/deploy (e.g., GEMINI_API_KEY) and is referenced by backend code as configuration",
+        "The app can run without the key configured, but calls to the Gemini-backed chatbot return a clear error indicating missing/invalid configuration"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Implement robust backend error handling and logging for Gemini calls, including: missing/invalid API key, rate limiting responses, request timeouts/failures, and unexpected response formats.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-user"
+        ],
+        "quotes": [
+          "Include robust error handling (invalid API key, timeout, rate limits).",
+          "Add logging for debugging and monitoring."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend logs key events for Gemini requests (request start, response status, error category) using Motoko logging primitives (e.g., Debug.print) without logging secrets",
+        "Backend distinguishes common Gemini failure modes (unauthorized/forbidden, rate-limited, timeout/network error) and returns actionable error messages",
+        "Malformed/partial Gemini responses are handled gracefully (no unhandled exceptions)"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Refactor backend Gemini integration into a clean, modular structure within the single Motoko actor file (no extra canisters): separate concerns for (1) Gemini API service client, (2) chat logic manager/prompt builder, and (3) public controller-style methods exposed by the actor.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-user"
+        ],
+        "quotes": [
+          "Implement modular architecture: API service layer (Gemini handler) Controller/route layer Chat logic manager Frontend integration layer"
+        ]
+      },
+      "acceptanceCriteria": [
+        "backend/main.mo contains clearly separated internal modules/functions for Gemini request construction, HTTP call execution, and response parsing",
+        "Public actor methods are thin wrappers that validate inputs and delegate to internal chat logic functions",
+        "No additional backend services or canisters are introduced (single-actor architecture preserved)"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Update the Chatbot UI to use the new backend Gemini-powered chat method instead of only local parsing + local achievement search logic; preserve loading states and show user-friendly error messages.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user"
+        ],
+        "quotes": [
+          "Capture user input from the chatbot interface.",
+          "Send the query to Gemini API.",
+          "Retrieve the generated/search response.",
+          "Format and display the response in the chatbot UI.",
+          "Handle loading states and error messages gracefully."
+        ]
+      },
+      "acceptanceCriteria": [
+        "frontend/src/pages/ChatbotPage.tsx sends the user's message to the backend actor Gemini chat method and renders the returned answer as an assistant message",
+        "The existing typing/loading indicator (isProcessing) remains functional while awaiting the backend response",
+        "On failure, the UI shows a clear, user-friendly error message (using existing normalization helpers such as frontend/src/lib/errors.ts)",
+        "Pressing Enter and clicking Send both trigger the same Gemini-backed send flow",
+        "No Gemini API calls are made directly from the browser"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Provide implementation deliverables in-repo: a complete backend example, frontend integration snippet location, example .env structure, and a sample request/response flow demonstration.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-user"
+        ],
+        "quotes": [
+          "Provide: Complete backend code example. Frontend integration snippet. Example environment configuration (.env structure). Sample request/response flow demonstration."
+        ]
+      },
+      "acceptanceCriteria": [
+        "A new documentation file is added (e.g., docs/gemini-chatbot.md) containing: .env example, configuration steps, sample prompt->backend->Gemini->response flow, and troubleshooting notes",
+        "The documentation references the exact frontend and backend files/functions updated (e.g., backend/main.mo and frontend/src/pages/ChatbotPage.tsx)",
+        "Documentation includes at least one concrete sample request and an example of the response shape returned from Gemini and what the UI displays"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Add a detailed, step-by-step explanation section (in documentation) describing the chatbot workflow from user input to final output, the data flow, dependencies, and how security/maintainability/scalability concerns are addressed for production usage on the Internet Computer.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-user"
+        ],
+        "quotes": [
+          "After Implementation – Detailed Explanation Section: Explain the complete chatbot workflow logic step-by-step (from user input to final output). List and explain all implemented libraries and dependencies. Provide a detailed architectural overview (client-server interaction, API calls, data flow). Explain how scalability, security, and maintainability are handled. Describe how the Gemini API processes and returns results within the chatbot context. Ensure the solution follows best practices for secure API usage, clean architecture, and production-ready design."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Documentation includes a numbered end-to-end workflow covering: UI input capture -> actor call -> Gemini request construction -> outbound HTTPS -> response parsing -> UI rendering",
+        "Documentation lists any new dependencies or platform features used (e.g., IC HTTPS outcalls) and why",
+        "Documentation explicitly states how secrets are kept server-side and how errors/rate limits are handled",
+        "Documentation describes operational considerations (logging, retry strategy if any, limits, and what to monitor)"
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor with all logic in `backend/main.mo`.",
-    "Only add `backend/migration.mo` if state shape changes require an upgrade migration (do not add one for this fix if unnecessary).",
-    "Do not edit frontend files under `frontend/src/components/ui` or the immutable hook paths listed in SYSTEM_CONTEXT."
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services, Node/Express servers, or Python/FastAPI.",
+    "Do not edit any paths listed as immutable: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui/*.",
+    "Gemini API key must not be shipped to the frontend or stored in plaintext in the repository."
   ],
   "nonGoals": [
-    "Implementing deployment speed optimizations.",
-    "Adding new roles/permissions beyond the existing admin-based verifier check.",
-    "UI/UX redesign or new frontend features."
+    "Implementing third-party authentication providers (only Internet Identity is supported).",
+    "Adding real-time streaming responses via WebSockets/SSE.",
+    "Building an external database or non-IC backend service to proxy Gemini.",
+    "Expanding chatbot scope beyond responding to user queries (no new unrelated product features)."
   ],
   "imageRequirements": {
     "required": [],

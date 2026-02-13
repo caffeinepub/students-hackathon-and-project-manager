@@ -39,6 +39,8 @@ export interface AchievementInput {
   'category' : AchievementCategory,
 }
 export type ExternalBlob = Uint8Array;
+export interface GeminiChatRequest { 'context' : string, 'message' : string }
+export interface GeminiChatResponse { 'answer' : string, 'prompt' : string }
 export interface Profile {
   'bio' : [] | [string],
   'principal' : Principal,
@@ -48,6 +50,15 @@ export interface Profile {
   'email' : string,
 }
 export type Time = bigint;
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -71,6 +82,12 @@ export interface _CaffeineStorageRefillResult {
   'success' : [] | [boolean],
   'topped_up_amount' : [] | [bigint],
 }
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
   '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
   '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
@@ -89,6 +106,7 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'chatWithGemini' : ActorMethod<[GeminiChatRequest], GeminiChatResponse>,
   'createAchievement' : ActorMethod<[AchievementInput], undefined>,
   'getAchievement' : ActorMethod<[string], Achievement>,
   'getAchievementsByStudentId' : ActorMethod<[string], Array<Achievement>>,
@@ -104,6 +122,7 @@ export interface _SERVICE {
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[Profile], undefined>,
   'searchAchievements' : ActorMethod<[string], Array<Achievement>>,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'verifyAchievement' : ActorMethod<
     [string, VerificationStatus, [] | [string]],
     undefined

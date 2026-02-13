@@ -1,24 +1,96 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
+  "summary": "Modify the existing hosted chatbot to integrate Google Gemini API for dynamic query answering with a modular, production-ready backend architecture and corresponding frontend integration.",
   "architectural_notes": [
-    "User approved proceeding (\"yes go\") to move the latest build (Version 4) forward (deploy/promote) after testing."
+    "Use environment variables for Gemini API key (.env) and never hardcode secrets.",
+    "Adopt layered/modular architecture: Gemini API service/handler, controller/routes, chat logic manager, and frontend integration.",
+    "Include async request handling with loading states in UI and backend timeouts.",
+    "Add robust error handling for invalid API key, timeouts, and rate limits; surface user-friendly messages.",
+    "Add logging for debugging/monitoring of chatbot request/response lifecycle (without logging secrets)."
   ],
   "known_issues": [],
   "isFixRequest": false,
-  "existing_features": [],
+  "existing_features": [
+    {
+      "id": "feature-securely-manage-the-gemini-api-key-so-it-is-never-hardcoded-in-source-and-never-exposed-to-the-browser-document-and-implement-environment-based-configuration-for-local-development-and-deployment",
+      "title": "Securely manage the Gemini API key so it is never hardcoded in source and never exposed to the browser; document and implement environment-based configuration for local development and deployment.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-chatbot-ui-to-use-the-new-backend-gemini-powered-chat-method-instead-of-only-local-parsing-local-achievement-search-logic-preserve-loading-states-and-show-user-friendly-error-messages",
+      "title": "Update the Chatbot UI to use the new backend Gemini-powered chat method instead of only local parsing + local achievement search logic; preserve loading states and show user-friendly error messages.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-provide-implementation-deliverables-in-repo-a-complete-backend-example-frontend-integration-snippet-location-example-env-structure-and-a-sample-request-response-flow-demonstration",
+      "title": "Provide implementation deliverables in-repo: a complete backend example, frontend integration snippet location, example .env structure, and a sample request/response flow demonstration.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-detailed-step-by-step-explanation-section-in-documentation-describing-the-chatbot-workflow-from-user-input-to-final-output-the-data-flow-dependencies-and-how-security-maintainability-scalability-concerns-are-addressed-for-production-usage-on-the-internet-computer",
+      "title": "Add a detailed, step-by-step explanation section (in documentation) describing the chatbot workflow from user input to final output, the data flow, dependencies, and how security/maintainability/scalability concerns are addressed for production usage on the Internet Computer.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix the deployment-blocking Motoko compilation issue in `backend/main.mo` by ensuring `isVerifier(caller : Principal) : Bool` reliably returns a `Bool` value (specifically the result of `AccessControl.isAdmin(accessControlState, caller)`) so the canister compiles and authorization checks behave as intended wherever `isVerifier` is used.",
+      "summary": "Integrate Google Gemini API into the existing chatbot (SDK/REST), using env-var API key management, async request handling, and returning formatted responses to the UI.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Implement modular backend architecture for chatbot: Gemini API service layer, controller/routes, chat logic manager, and frontend integration layer with logging and robust error handling (timeouts, invalid key, rate limits).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Provide implementation deliverables: complete backend code example, frontend snippet, .env structure, sample request/response flow, and detailed post-implementation explanation (workflow, dependencies, architecture, scalability/security/maintainability).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Add a backend chat endpoint that sends chatbot user messages to the Google Gemini API (Generative Language REST) and returns the generated response text to the frontend.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Implement robust backend error handling and logging for Gemini calls, including: missing/invalid API key, rate limiting responses, request timeouts/failures, and unexpected response formats.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Refactor backend Gemini integration into a clean, modular structure within the single Motoko actor file (no extra canisters): separate concerns for (1) Gemini API service client, (2) chat logic manager/prompt builder, and (3) public controller-style methods exposed by the actor.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
     }
   ],
-  "projectName": "Fix deployment-blocking Motoko compilation error in isVerifier",
+  "gameProjectType": "none",
+  "projectName": "Integrate Google Gemini API into existing chatbot (IC Motoko backend + React UI)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -6,6 +6,32 @@ export function normalizeError(error: unknown): string {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
+    // Gemini-specific errors
+    if (message.includes('gemini api key not configured') || message.includes('invalid gemini api key configuration')) {
+      return 'The AI service is not configured properly. Please contact the administrator to set up the Gemini API key.';
+    }
+    if (message.includes('invalid gemini api key') || message.includes('api key not valid')) {
+      return 'The AI service API key is invalid. Please contact the administrator.';
+    }
+    if (message.includes('gemini rate limit') || message.includes('rate limit')) {
+      return 'The AI service is currently rate-limited. Please try again in a few moments.';
+    }
+    if (message.includes('gemini request timeout') || message.includes('request timeout')) {
+      return 'The AI service request timed out. Please try again.';
+    }
+    if (message.includes('gemini network error')) {
+      return 'Unable to reach the AI service. Please check your connection and try again.';
+    }
+    if (message.includes('gemini returned unexpected response') || message.includes('unexpected response')) {
+      return 'The AI service returned an unexpected response. Please try rephrasing your question.';
+    }
+    if (message.includes('endpoint not found')) {
+      return 'The AI service endpoint was not found. Please contact the administrator.';
+    }
+    if (message.includes('invalid gemini model')) {
+      return 'The AI model configuration is invalid. Please contact the administrator.';
+    }
+
     // Map common backend errors to user-friendly messages
     if (message.includes('unauthorized')) {
       return 'You do not have permission to perform this action.';

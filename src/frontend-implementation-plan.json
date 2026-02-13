@@ -1,6 +1,90 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend-only plan: no changes required for backend-only Motoko compilation fix",
-  "requirements": []
+  "title": "Gemini-powered chatbot UI integration (React frontend)",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "summary": "Ensure Gemini API key is never present in frontend code and provide frontend-facing configuration documentation/examples for environment-based setup.",
+      "acceptanceCriteria": [
+        "No frontend code contains the Gemini API key",
+        "No backend source contains a literal API key value",
+        "A documented configuration approach exists that uses environment variables during build/deploy (e.g., GEMINI_API_KEY) and is referenced by backend code as configuration",
+        "The app can run without the key configured, but calls to the Gemini-backed chatbot return a clear error indicating missing/invalid configuration"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/.env.example",
+          "operation": "create",
+          "description": "Add an example environment file that documents required deployment-time variables for Gemini (e.g., GEMINI_API_KEY) without including any real secret values; clarify that this key is server-side only and must not be used by Vite-prefixed frontend env vars."
+        },
+        {
+          "path": "frontend/DEPLOYMENT.md",
+          "operation": "modify",
+          "description": "Document how to supply GEMINI_API_KEY to the backend environment during local development and deployment, explicitly stating the key must never be added to frontend build-time variables or shipped to the browser."
+        },
+        {
+          "path": "frontend/docs/gemini-chatbot.md",
+          "operation": "create",
+          "description": "Add documentation covering secure configuration for Gemini (server-side only), referencing GEMINI_API_KEY setup and explicitly stating the frontend must not include or request the key."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Update the Chatbot UI to call the backend Gemini chat method, keep loading/typing states, and display user-friendly errors without any browser-side Gemini calls.",
+      "acceptanceCriteria": [
+        "frontend/src/pages/ChatbotPage.tsx sends the user's message to the backend actor Gemini chat method and renders the returned answer as an assistant message",
+        "The existing typing/loading indicator (isProcessing) remains functional while awaiting the backend response",
+        "On failure, the UI shows a clear, user-friendly error message (using existing normalization helpers such as frontend/src/lib/errors.ts)",
+        "Pressing Enter and clicking Send both trigger the same Gemini-backed send flow",
+        "No Gemini API calls are made directly from the browser"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/ChatbotPage.tsx",
+          "operation": "modify",
+          "description": "Refactor the send flow to call actor.chatWithGemini(...) and render the returned answer as the assistant message; preserve isProcessing typing indicator; use frontend/src/lib/errors.ts normalizeError to show user-friendly error messages; ensure Enter and Send button both use the same handler; remove/stop relying on local-only parse/search for the primary response path so the chat is Gemini-backed."
+        },
+        {
+          "path": "frontend/src/lib/errors.ts",
+          "operation": "modify",
+          "description": "Extend normalizeError mappings to surface clearer messages for Gemini-related backend failures (e.g., missing configuration, rate limiting, unauthorized/forbidden) based on error message text returned by the backend, without exposing secrets."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Add in-repo frontend deliverables: documentation with .env structure, exact integration file references, and a sample request/response flow demonstration.",
+      "acceptanceCriteria": [
+        "A new documentation file is added (e.g., docs/gemini-chatbot.md) containing: .env example, configuration steps, sample prompt->backend->Gemini->response flow, and troubleshooting notes",
+        "The documentation references the exact frontend and backend files/functions updated (e.g., backend/main.mo and frontend/src/pages/ChatbotPage.tsx)",
+        "Documentation includes at least one concrete sample request and an example of the response shape returned from Gemini and what the UI displays"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/docs/gemini-chatbot.md",
+          "operation": "modify",
+          "description": "Include: (1) .env example structure (referencing frontend/.env.example and server-side GEMINI_API_KEY), (2) configuration steps for local/dev/prod, (3) exact code locations updated on the frontend (frontend/src/pages/ChatbotPage.tsx) and the backend function name to call (chatWithGemini), and (4) a concrete sample prompt and example response (GeminiChatResponse shape) plus how the UI displays it."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Provide a detailed step-by-step documentation explanation of the chatbot workflow, data flow, dependencies, and production security/maintainability/scalability considerations.",
+      "acceptanceCriteria": [
+        "Documentation includes a numbered end-to-end workflow covering: UI input capture -> actor call -> Gemini request construction -> outbound HTTPS -> response parsing -> UI rendering",
+        "Documentation lists any new dependencies or platform features used (e.g., IC HTTPS outcalls) and why",
+        "Documentation explicitly states how secrets are kept server-side and how errors/rate limits are handled",
+        "Documentation describes operational considerations (logging, retry strategy if any, limits, and what to monitor)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/docs/gemini-chatbot.md",
+          "operation": "modify",
+          "description": "Add a numbered, end-to-end workflow section describing: user input capture in ChatbotPage -> actor call -> backend Gemini request -> IC HTTPS outcall -> response parsing -> UI render; list relevant platform features/dependencies at a high level; describe server-side secret handling (no browser exposure) and how errors/rate limits are surfaced to the UI; include operational notes (logging/monitoring considerations and any retry strategy if used)."
+        }
+      ]
+    }
+  ]
 }

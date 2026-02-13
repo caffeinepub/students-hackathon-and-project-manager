@@ -1,29 +1,86 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T10:11:01.378Z",
-  "summary": "The diff does not implement the requested backend fix. Only `project_state.json` was modified to record the request as pending; no changes were made to `backend/main.mo` or any Motoko code.",
+  "generatedAt": "2026-02-13T09:35:21.222Z",
+  "summary": "Diff adds frontend-facing Gemini chat UI wiring, error normalization, and some deployment/docs artifacts, but the backend Gemini endpoint, secure key management via environment/secrets, robust error handling/logging, and required documentation details are not clearly evidenced in the provided truncated diffs.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Fix the deployment-blocking Motoko compilation issue in `backend/main.mo` by ensuring `isVerifier(caller : Principal) : Bool` reliably returns a `Bool` value (specifically the result of `AccessControl.isAdmin(accessControlState, caller)`) so the canister compiles and authorization checks behave as intended wherever `isVerifier` is used.",
-      "reason": "No backend files were modified; there is no evidence that `isVerifier` was updated or that the referenced call sites were verified/adjusted to compile.",
+      "requirement": "Backend exposes a new public shared method (e.g., chatWithGemini(prompt : Text) : async Text) that performs an HTTPS outcall to Gemini REST, parses response into plain text, and returns meaningful errors on non-2xx responses.",
+      "reason": "backend/main.mo is heavily truncated and the diff summary does not show any new public shared chat method, Gemini HTTP request construction, response parsing, or non-2xx handling logic. Only an OutCall import is visible.",
       "evidence": [
-        "project_state.json (only modified file; shows REQ-1 status pending)"
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Secure environment-based/secrets-based configuration for Gemini API key (no hardcoded key; not exposed to browser); app runs without key with clear error.",
+      "reason": "backend/main.mo shows a placeholder string assignment `\"{IC_SECRETS_GEMINI_API_KEY}\"` but does not evidence environment-variable/secrets injection mechanism in code, nor runtime behavior when missing/invalid. Additionally, the only .env example added is under `frontend/.env.example`, which does not demonstrate backend-side environment configuration.",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/.env.example",
+        "frontend/DEPLOYMENT.md"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Robust backend error handling and logging for Gemini calls (missing/invalid key, rate limiting, timeouts/network failures, unexpected response formats) without logging secrets.",
+      "reason": "No backend Gemini call path is visible in the truncated backend file, and there is no evidence of Debug.print logging around Gemini requests, nor explicit branching on common failure modes (401/403, 429, timeout/network), nor graceful handling of malformed Gemini responses.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Modular Gemini integration within the single Motoko actor file: separate internal modules/functions for (1) Gemini API client, (2) chat logic/prompt builder, (3) thin public controller-style actor methods.",
+      "reason": "The truncated backend excerpt does not show any internal modular structure for Gemini (client/request builder/parser) nor thin public wrappers delegating to that logic.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Add documentation file (e.g., docs/gemini-chatbot.md) with .env example, configuration steps, sample prompt->backend->Gemini->response flow, troubleshooting, and references to exact updated files/functions; include sample request and example Gemini response shape and UI display.",
+      "reason": "A documentation file was added but its content is truncated and only shows headings/architecture stub; the required concrete sections (sample request/response shapes, explicit file/function references, troubleshooting, and .env/config steps) are not evidenced in the provided snippet.",
+      "evidence": [
+        "frontend/docs/gemini-chatbot.md"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Documentation includes a numbered end-to-end workflow (UI -> actor -> Gemini request -> HTTPS outcall -> parse -> UI), lists dependencies/platform features used, explains secrets handling and errors/rate limits, and operational considerations (logging/monitoring/retry/limits).",
+      "reason": "The added documentation file content is truncated and does not show the required numbered workflow, dependency list (e.g., IC HTTPS outcalls), explicit security/error-handling explanation, or operational considerations.",
+      "evidence": [
+        "frontend/docs/gemini-chatbot.md"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added/updated project tracking metadata for the request (new_feature_requests entry with REQ-1 marked pending) in `project_state.json`.",
-      "reason": "The BuildRequest only asks for a Motoko compilation fix in `backend/main.mo`; it does not request changes to project tracking/state files.",
+      "description": "Frontend attempts to parse `response.answer` as JSON and extract `candidates[0].content.parts[0].text`, implying the backend may return raw Gemini JSON rather than plain text.",
+      "reason": "REQ-1 specifies the backend should parse Gemini response and return plain text. The UI-side JSON parsing suggests a different response contract and adds behavior not requested by the spec.",
       "evidence": [
-        "project_state.json"
+        "frontend/src/pages/ChatbotPage.tsx"
+      ]
+    },
+    {
+      "description": "Backend stores a Gemini API key placeholder as a string literal in source (`\"{IC_SECRETS_GEMINI_API_KEY}\"`).",
+      "reason": "While not a real key, this implements a specific secrets-placeholder mechanism not explicitly requested (the request asked for environment-based configuration like `GEMINI_API_KEY` and clear missing-key behavior).",
+      "evidence": [
+        "backend/main.mo"
       ]
     }
   ],
-  "confidence": 0.88,
+  "confidence": 0.66,
   "changed_files": [
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/.env.example",
+    "frontend/DEPLOYMENT.md",
+    "frontend/docs/gemini-chatbot.md",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/lib/errors.ts",
+    "frontend/src/pages/ChatbotPage.tsx",
     "project_state.json"
   ]
 }

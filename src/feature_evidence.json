@@ -1,4 +1,92 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-securely-manage-the-gemini-api-key-so-it-is-never-hardcoded-in-source-and-never-exposed-to-the-browser-document-and-implement-environment-based-configuration-for-local-development-and-deployment",
+      "featureTitle": "Securely manage the Gemini API key so it is never hardcoded in source and never exposed to the browser; document and implement environment-based configuration for local development and deployment.",
+      "files": [
+        "frontend/.env.example",
+        "frontend/DEPLOYMENT.md",
+        "frontend/docs/gemini-chatbot.md"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-chatbot-ui-to-use-the-new-backend-gemini-powered-chat-method-instead-of-only-local-parsing-local-achievement-search-logic-preserve-loading-states-and-show-user-friendly-error-messages",
+      "featureTitle": "Update the Chatbot UI to use the new backend Gemini-powered chat method instead of only local parsing + local achievement search logic; preserve loading states and show user-friendly error messages.",
+      "files": [
+        "frontend/src/lib/errors.ts",
+        "frontend/src/pages/ChatbotPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-provide-implementation-deliverables-in-repo-a-complete-backend-example-frontend-integration-snippet-location-example-env-structure-and-a-sample-request-response-flow-demonstration",
+      "featureTitle": "Provide implementation deliverables in-repo: a complete backend example, frontend integration snippet location, example .env structure, and a sample request/response flow demonstration.",
+      "files": [
+        "frontend/docs/gemini-chatbot.md"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-detailed-step-by-step-explanation-section-in-documentation-describing-the-chatbot-workflow-from-user-input-to-final-output-the-data-flow-dependencies-and-how-security-maintainability-scalability-concerns-are-addressed-for-production-usage-on-the-internet-computer",
+      "featureTitle": "Add a detailed, step-by-step explanation section (in documentation) describing the chatbot workflow from user input to final output, the data flow, dependencies, and how security/maintainability/scalability concerns are addressed for production usage on the Internet Computer.",
+      "files": [
+        "frontend/docs/gemini-chatbot.md"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

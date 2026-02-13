@@ -1,32 +1,106 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T10:11:01.380Z",
+  "generatedAt": "2026-02-13T09:35:21.225Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 0,
+    "total": 7,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the deployment-blocking Motoko compilation issue in `backend/main.mo` by ensuring `isVerifier(caller : Principal) : Bool` reliably returns a `Bool` value (specifically the result of `AccessControl.isAdmin(accessControlState, caller)`) so the canister compiles and authorization checks behave as intended wherever `isVerifier` is used.",
+        "summary": "Add a backend chat endpoint that sends chatbot user messages to the Google Gemini API (Generative Language REST) and returns the generated response text to the frontend.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Securely manage the Gemini API key so it is never hardcoded in source and never exposed to the browser; document and implement environment-based configuration for local development and deployment.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/.env.example",
+          "frontend/DEPLOYMENT.md",
+          "frontend/docs/gemini-chatbot.md"
+        ],
+        "matchedFiles": [
+          "frontend/.env.example",
+          "frontend/DEPLOYMENT.md",
+          "frontend/docs/gemini-chatbot.md"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Implement robust backend error handling and logging for Gemini calls, including: missing/invalid API key, rate limiting responses, request timeouts/failures, and unexpected response formats.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Refactor backend Gemini integration into a clean, modular structure within the single Motoko actor file (no extra canisters): separate concerns for (1) Gemini API service client, (2) chat logic manager/prompt builder, and (3) public controller-style methods exposed by the actor.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Update the Chatbot UI to use the new backend Gemini-powered chat method instead of only local parsing + local achievement search logic; preserve loading states and show user-friendly error messages.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/ChatbotPage.tsx",
+          "frontend/src/lib/errors.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/ChatbotPage.tsx",
+          "frontend/src/lib/errors.ts"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Provide implementation deliverables in-repo: a complete backend example, frontend integration snippet location, example .env structure, and a sample request/response flow demonstration.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/docs/gemini-chatbot.md"
+        ],
+        "matchedFiles": [
+          "frontend/docs/gemini-chatbot.md"
+        ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Add a detailed, step-by-step explanation section (in documentation) describing the chatbot workflow from user input to final output, the data flow, dependencies, and how security/maintainability/scalability concerns are addressed for production usage on the Internet Computer.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/docs/gemini-chatbot.md"
+        ],
+        "matchedFiles": [
+          "frontend/docs/gemini-chatbot.md"
+        ]
       }
     ]
   },
   "changedFiles": [
+    "backend/http-outcalls/outcall.mo",
+    "backend/main.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/.env.example",
+    "frontend/DEPLOYMENT.md",
+    "frontend/docs/gemini-chatbot.md",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/lib/errors.ts",
+    "frontend/src/pages/ChatbotPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

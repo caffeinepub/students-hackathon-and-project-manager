@@ -1,22 +1,28 @@
 import Map "mo:core/Map";
 import Iter "mo:core/Iter";
 import Array "mo:core/Array";
+import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Order "mo:core/Order";
-import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 
-import Storage "blob-storage/Storage";
-import MixinStorage "blob-storage/Mixin";
+import Nat64 "mo:core/Nat64";
+import List "mo:core/List";
+import Debug "mo:core/Debug";
 
+import MixinStorage "blob-storage/Mixin";
+import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import OutCall "http-outcalls/outcall";
 
 actor {
+  type GeminiApiKey = { unredacted : Text };
+  let geminiApiKey = ?{ unredacted = "{IC_SECRETS_GEMINI_API_KEY}" : Text };
+
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
-
   include MixinStorage();
 
   type Profile = {
@@ -33,7 +39,7 @@ actor {
       switch (Text.compare(profile1.name, profile2.name)) {
         case (#equal) { Text.compare(profile1.email, profile2.email) };
         case (order) { order };
-      }
+      };
     };
   };
 
@@ -279,5 +285,160 @@ actor {
     };
 
     achievements.values().toArray().filter(func(a) { a.status == #pending });
+  };
+
+  // Geminis Chatbot Overview
+  type GeminiChatRequest = {
+    context : Text;
+    message : Text;
+  };
+
+  type GeminiChatResponse = {
+    prompt : Text;
+    answer : Text;
+  };
+
+  public shared ({ caller }) func chatWithGemini(chatRequest : GeminiChatRequest) : async GeminiChatResponse {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can chat with Gemini");
+    };
+
+    switch (geminiApiKey) {
+      case (null) { Runtime.trap("Gemini API key not configured properly; check your deployment secrets (.env) ") };
+      case (?api) {
+        let prompt = buildPrompt(chatRequest.context, chatRequest.message);
+        let responseText = await callGeminiApi(prompt);
+        {
+          prompt;
+          answer = responseText;
+        };
+      };
+    };
+  };
+
+  func buildPrompt(context : Text, message : Text) : Text {
+    "Context: " # context # " User Message: " # message;
+  };
+
+  type GeminiModel = {
+    #geminiPro;
+    #geminiUltra;
+    #codeGen;
+    #textEmbedding;
+    #textToImage;
+    #videoGeneration;
+  };
+
+  type GeminiApiError = {
+    #invalidApiKey;
+    #rateLimited;
+    #requestTimeout;
+    #unexpectedResponse;
+    #networkError;
+    #unknownError;
+    #notFound;
+    #invalidModel;
+  };
+
+  func getModelName(modelId : GeminiModel) : Text {
+    switch (modelId) {
+      case (#geminiPro) { "models/gemini-1.0-pro-latest" };
+      case (#geminiUltra) { "models/gemini-1.0-ultra-latest" };
+      case (#codeGen) { "models/gemini-1.0-pro-001" };
+      case (#textEmbedding) { "models/embedding-001" };
+      case (#textToImage) { "models/gemini-1.0-pro-001" };
+      case (#videoGeneration) { "models/gemini-1.0-pro-001" };
+    };
+  };
+
+  // Gemini API Client
+  func callGeminiApi(prompt : Text) : async Text {
+    let apiKey = switch (geminiApiKey) {
+      case (null) { Runtime.trap("Invalid Gemini API key configuration; check your deployment secrets (.env)") };
+      case (?apiKey) { apiKey.unredacted };
+    };
+
+    let url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-latest:generateContent";
+    let requestBody = createRequestBody(prompt);
+    let apiResponse = await postRequest(url, apiKey, requestBody);
+    switch (parseResponse(apiResponse)) {
+      case (#ok(result)) { result };
+      case (#unexpectedResponse) {
+        Runtime.trap("Gemini returned unexpected response: " # url # apiKey # requestBody # apiResponse # apiKey);
+      };
+      case (#rateLimited) { Runtime.trap("Gemini rate limiting. Try again later.") };
+      case (#invalidApiKey) { Runtime.trap("Invalid Gemini API key") };
+      case (#notFound) { Runtime.trap("Endpoint not found") };
+      case (#requestTimeout) { Runtime.trap("Gemini request timeout ") };
+      case (#networkError) { Runtime.trap("Gemini network error") };
+      case (#unknownError) { Runtime.trap("Gemini unknown error ") };
+      case (#invalidModel) { Runtime.trap("Invalid Gemini model for prompt ") };
+    };
+  };
+
+  func createRequestBody(prompt : Text) : Text {
+    "{
+      \"contents\": [{
+        \"parts\": [{
+          \"text\": \"" # prompt # "\"
+        }]
+      }]
+    }";
+  };
+
+  public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
+
+  func postRequest(url : Text, apiKey : Text, body : Text) : async Text {
+    let requestUrl = url # "?key=" # apiKey;
+    let responseText = await OutCall.httpPostRequest(
+      requestUrl,
+      [ { name = "Content-Type"; value = "application/json" } ],
+      body,
+      transform,
+    );
+    Debug.print("[Gemini] Response from Gemini: " # responseText);
+    responseText;
+  };
+
+  type GeminiApiErrorCode = {
+    #invalidApiKey;
+    #rateLimited;
+    #requestTimeout;
+    #unexpectedResponse;
+    #networkError;
+    #unknownError;
+    #notFound;
+    #invalidPrompt;
+    #invalidModel;
+  };
+
+  func parseResponse(responseText : Text) : {
+    #ok : Text;
+    #unexpectedResponse;
+    #rateLimited;
+    #invalidApiKey;
+    #notFound;
+    #requestTimeout;
+    #networkError;
+    #unknownError;
+    #invalidModel;
+  } {
+    if (responseText.contains(#text "Rate limit")) {
+      #rateLimited;
+    } else if (responseText == "{\"error\":{\"code\":401,\"message\":\"API key not valid. Please pass a valid API key.\",\"status\":\"UNAUTHENTICATED\"}}\n") {
+      #invalidApiKey;
+    } else if (responseText.contains(#text "Not Found")) {
+      #notFound;
+    } else if (responseText.contains(#text "timeout")) {
+      #requestTimeout;
+    } else if (responseText == "" or responseText.contains(#text "errorMessage") or responseText.contains(#text "Invalid argument") or responseText.contains(#text "internal") or responseText.contains(#text "Invalid") or responseText.contains(#text "Error")) {
+      #unexpectedResponse;
+    } else if (responseText.contains(#text "model not found")) {
+      #invalidModel;
+    } else {
+      #ok(responseText);
+    };
   };
 };
